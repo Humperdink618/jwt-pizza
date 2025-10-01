@@ -20,6 +20,9 @@ jobs:
         with:
           node-version: '24.x'
 
+      - name: Install nyc
+        run: npm install nyc
+
       - name: Run tests
         run: |
           npx playwright install --with-deps chromium
