@@ -1,6 +1,6 @@
 # 🍕 JWT Pizza
 
-![Coverage badge](https://pizza-factory.cs329.click/api/badge/antoshka/jwtpizzacoverage)
+![Coverage badge](https://pizza-factory.cs329.click/api/badge/antoshka/jwtpizzacoverage?label=Coverage&value=$coverage%25&color=$color" -H "authorization: bearer ${{ secrets.FACTORY_API_KEY }})
 
 [![CI Pipeline](https://github.com/Humperdink618/jwt-pizza/actions/workflows/ci.yml/badge.svg)](https://github.com/Humperdink618/jwt-pizza/actions/workflows/ci.yml)
 
