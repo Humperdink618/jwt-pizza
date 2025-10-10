@@ -41,7 +41,7 @@ export default function AdminDashboard(props: Props) {
   }
 
   async function deleteUser(user: User) {
-    //
+    navigate('/admin-dashboard/delete-user', { state: { user: user } });
   }
 
   async function closeStore(franchise: Franchise, store: Store) {

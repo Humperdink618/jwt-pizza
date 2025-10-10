@@ -80,6 +80,10 @@ class HttpPizzaService implements PizzaService {
     return this.callEndpoint(`/api/user?page=${page}&limit=${limit}&name=${nameFilter}`);
   }
 
+  async deleteUser(userId: number): Promise<void> {
+    return this.callEndpoint(`/api/user/${userId}`, 'DELETE');
+  }
+
   async getMenu(): Promise<Menu> {
     return this.callEndpoint('/api/order/menu');
   }
