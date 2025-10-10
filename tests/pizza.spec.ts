@@ -508,6 +508,37 @@ async function adminInit(page: Page) {
     await route.fulfill({ json: franchiseRes });
   });
 
+  // Standard users
+  await page.route(/\/api\/user(\?.*)?$/, async (route) => {
+    const userRes = {
+      users: [
+        {
+         id: '3',
+         name: 'Kai Chen',
+         email: 'd@jwt.com',
+         roles: [{ role: Role.Diner }]  
+        },
+        { id: '4',
+          name: 'Serial Designation N',
+          email: 'GoldenRetriever@test.com',
+          roles: [{ role: Role.Diner }] 
+        },
+        { id: '5',
+          name: 'franchisee',
+          email: 'f@jwt.com',
+          roles: [{role: Role.Diner}, { objectId: '1', role: Role.Franchisee }] 
+        },
+        { id: '6',
+          name: 'admin',
+          email: 'admin@jwt.com',
+          roles: [{ role: Role.Admin }] 
+        }
+      ],
+    };
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({ json: userRes });
+  });
+
   // Create franchise
   await page.route('*/**/api/franchise', async (route) => {
     const createFranchiseReq = {
@@ -620,12 +651,13 @@ test('login as admin', async ({ page }) => {
   await expect(page.getByRole('heading')).toContainText('Create franchise');
   await page.getByRole('button', { name: 'Create' }).click();
   await expect(page.locator('h2')).toContainText('Mama Ricci\'s kitchen');
-  await expect(page.getByRole('table')).toContainText('pizzaPalooza3000');
+  await expect(page.getByRole('main')).toContainText('pizzaPalooza3000');
+  // await expect(page.getByRole('table')).toContainText('pizzaPalooza3000');
   await page.getByRole('row', { name: 'pizzaPalooza3000 admin Close' }).getByRole('button').click();
   await expect(page.getByRole('heading')).toContainText('Sorry to see you go');
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page.locator('h2')).toContainText('Mama Ricci\'s kitchen');
-
+  await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible();
 
 });
 
