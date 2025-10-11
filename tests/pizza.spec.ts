@@ -726,12 +726,101 @@ test('admin delete user', async ({ page }) => {
   await expect(page.locator('h2')).toContainText('Mama Ricci\'s kitchen');
 });
 
-test('updateUser', async ({ page }) => {
-  const email = `user${Math.floor(Math.random() * 10000)}@jwt.com`;
+async function updateInit(page: Page) {
+  let loggedInUser: User | undefined;
+  const validUsers: Record<string, User> = { 'BiteMe@jwt.com': { id: '7', name: 'pizza diner', email: 'BiteMe@jwt.com', password: 'diner', roles: [{ role: Role.Diner }] } };
+  const updatedUsers: Record<string, User> = { 'BiteMe@jwt.com': { id: '7', name: 'pizza dinerx', email: 'BiteMe@jwt.com', password: 'diner', roles: [{ role: Role.Diner }] } };
+  
+  // Authorize login for the given user
+  await page.route('*/**/api/auth', async (route) => {
+    if (route.request().method() === 'DELETE') {
+      const logoutRes = {
+        message: 'logout successful'
+      };
+      await route.fulfill({ json: logoutRes });
+    } else if (route.request().method() === 'POST') {
+
+      // Authorize register for the given user
+
+      const registerReq = route.request().postDataJSON();
+      loggedInUser = validUsers[registerReq.email];
+      const registerRes = {
+        user: loggedInUser,
+        token: '99999',
+      };
+      expect(route.request().method()).toBe('POST');
+      await route.fulfill({ json: registerRes });
+    } else {
+      const loginReq = route.request().postDataJSON();
+      const user = validUsers[loginReq.email];
+      if (!user || user.password !== loginReq.password) {
+        await route.fulfill({ status: 401, json: { error: 'Unauthorized' } });
+        return;
+      }
+      loggedInUser = updatedUsers[loginReq.email];
+      const loginRes = {
+        user: loggedInUser,
+        token: '99999',
+      };
+      expect(route.request().method()).toBe('PUT');
+      await route.fulfill({ json: loginRes });
+    }
+  });
+    
+  // Return the currently logged in user
+  await page.route('*/**/api/user/me', async (route) => {
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({ json: loggedInUser });
+  });
+
+  // Update a user
+  await page.route(/\/api\/user\/\d+$/, async (route) => {
+    if (route.request().method() === 'PUT') {
+      const updateReq = route.request().postDataJSON();
+      
+      // const newUser = validUsers[updateReq.email];
+      // if (!newUser || newUser.password !== updateReq.password) {
+      //   await route.fulfill({ status: 401, json: { error: 'Unauthorized' } });
+      //   return;
+      // }
+      loggedInUser = updatedUsers[updateReq.email];
+      const updateRes = {
+        user: loggedInUser,
+        token: '99999',
+      };
+      expect(route.request().method()).toBe('PUT');
+      await route.fulfill({ json: updateRes });
+
+      // await page.unroute('*/**/api/auth');
+
+      // await page.route('*/**/api/auth', async (route) => {
+        
+      //   loggedInUser = updatedUsers[updateReq.email];
+      //   const loginRes = {
+      //     user: loggedInUser,
+      //     token: '99999',
+      //   };
+      //   expect(route.request().method()).toBe('PUT');
+      //   await route.fulfill({ json: loginRes });
+      // });
+
+    }
+  });
+
   await page.goto('/');
+}
+
+
+
+test('updateUser', async ({ page }) => {
+  // const email = `user${Math.floor(Math.random() * 10000)}@jwt.com`;
+  // await page.goto('/');
+  test.setTimeout(20_000);
+  await updateInit(page);
+
   await page.getByRole('link', { name: 'Register' }).click();
   await page.getByRole('textbox', { name: 'Full name' }).fill('pizza diner');
-  await page.getByRole('textbox', { name: 'Email address' }).fill(email);
+  await page.getByRole('textbox', { name: 'Email address' }).fill('BiteMe@jwt.com');
   await page.getByRole('textbox', { name: 'Password' }).fill('diner');
   await page.getByRole('button', { name: 'Register' }).click();
 
@@ -750,7 +839,7 @@ test('updateUser', async ({ page }) => {
   await page.getByRole('link', { name: 'Logout' }).click();
   await page.getByRole('link', { name: 'Login' }).click();
 
-  await page.getByRole('textbox', { name: 'Email address' }).fill(email);
+  await page.getByRole('textbox', { name: 'Email address' }).fill('BiteMe@jwt.com');
   await page.getByRole('textbox', { name: 'Password' }).fill('diner');
   await page.getByRole('button', { name: 'Login' }).click();
 
